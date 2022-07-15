@@ -10,13 +10,24 @@ const getWeatherByCity = async function(cityName){
     .then(data=>data)
 }
 
+const getUvIndex = async function(latitude,longitude){
+    return fetch(`https://api.openweathermap.org/data/2.5/uvi?lat=${latitude}&lon=${longitude}&appid=${apiKey}`)
+    .then(function(response){ // response => response.json()
+        return response.json()
+    })
+    .then(data=>data)
+}
+
+
 const getWeatherIcon = function(iconCode){
     return `https://openweathermap.org/img/w/${iconCode}.png`
 }
 
-const renderCityInfo = function (cityInfo){
+const renderCityInfo = async function (cityInfo){
     const iconCode = cityInfo.weather[0].icon;
     const iconURL = getWeatherIcon(iconCode);
+    const uvIndex = await getUvIndex(cityInfo.coord.lat,cityInfo.coord.lon);
+
     const currentCity = `
         <h2 id="currentCity">
             ${cityInfo.name} <img src="${iconURL}" alt="${cityInfo.weather[0].description}" />
@@ -27,9 +38,31 @@ const renderCityInfo = function (cityInfo){
         <p>Temperature: ${cityInfo.main.temp} °F</p>
         <p>Humidity: ${cityInfo.main.humidity}\%</p>
         <p>Wind Speed: ${cityInfo.wind.speed} MPH</p>
+        <p>UV Index: 
+            <span id="uv-index-color" class="px-2 py-2 rounded">${uvIndex.value}</span>
+        </p>
     `;
     document.getElementById("city-weather-details").innerHTML = currentCity;
+    renderUvIndexColor(uvIndex.value);
     displayWeatherContent (true);
+}
+
+const renderUvIndexColor = function (uvIndex){
+    const uvIndexColor = document.getElementById("uv-index-color")
+    if (uvIndex > 0 && uvIndex < 3) {
+        uvIndexColor.style.backgroundColor = "#3EA72D";
+        uvIndexColor.style.color = "white";
+    } else if (uvIndex > 3 && uvIndex < 6) {
+        uvIndexColor.style.backgroundColor = "#FFF300";
+    } else if (uvIndex > 6 && uvIndex < 8) {
+        uvIndexColor.style.backgroundColor = "#F18B00";
+    } else if (uvIndex > 8 && uvIndex < 11) {
+        uvIndexColor.style.backgroundColor = "#E53210";
+        uvIndexColor.style.color = "white";
+    } else {
+        uvIndexColor.style.backgroundColor = "#B567A4";
+        uvIndexColor.style.color = "white";
+    };  
 }
 
 const displayWeatherContent = function (isDisplay){
@@ -62,7 +95,7 @@ const renderSearchHistory = function (){
 
         // ✅ Add classes to element
         el.classList.add('list-group-item');
-
+        el.style.cursor="pointer";
         // ✅ Add text content to element
         el.textContent = cityName;
         el.addEventListener("click", async (event)=>{
@@ -95,7 +128,6 @@ document.getElementById("search-button").addEventListener("click", async (event)
 
     // upon getting the cityName we need to get the city info from the open weather api
     const cityInfo = await getWeatherByCity(cityName);
-
     // displays the city info that we get from the api
     renderCityInfo(cityInfo);
 
@@ -105,8 +137,6 @@ document.getElementById("search-button").addEventListener("click", async (event)
     //local storage
     // localStorage.getItem(keyname)
 })
-
-
 
 window.addEventListener('load', (event) => {
     renderSearchHistory();
