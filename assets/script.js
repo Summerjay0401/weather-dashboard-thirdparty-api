@@ -65,6 +65,11 @@ const renderSearchHistory = function (){
 
         // ✅ Add text content to element
         el.textContent = cityName;
+        el.addEventListener("click", async (event)=>{
+            event.preventDefault(); 
+            const cityInfo = await getWeatherByCity(event.target.textContent);
+            renderCityInfo(cityInfo);
+        })
         searchHistorySection.append(el);
     });
 }
@@ -85,7 +90,7 @@ const renderSearchHistory = function (){
 document.getElementById("search-button").addEventListener("click", async (event)=>{
     event.preventDefault(); 
 
-    // this will get the city in the search nput text
+    // this will get the city in the search input text
     const cityName = document.getElementById("input-enter-city").value;
 
     // upon getting the cityName we need to get the city info from the open weather api
@@ -100,6 +105,8 @@ document.getElementById("search-button").addEventListener("click", async (event)
     //local storage
     // localStorage.getItem(keyname)
 })
+
+
 
 window.addEventListener('load', (event) => {
     renderSearchHistory();
