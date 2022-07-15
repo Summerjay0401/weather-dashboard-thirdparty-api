@@ -29,8 +29,57 @@ const renderCityInfo = function (cityInfo){
         <p>Wind Speed: ${cityInfo.wind.speed} MPH</p>
     `;
     document.getElementById("city-weather-details").innerHTML = currentCity;
-    // document.getElementById("weather-content").style.display = "block";
+    displayWeatherContent (true);
 }
+
+const displayWeatherContent = function (isDisplay){
+    if (isDisplay === true)
+        document.getElementById("weather-content").style.display = "block";
+    else
+        document.getElementById("weather-content").style.display = "none"; 
+}
+
+const getSearchHistory = function () {
+    const listofCityNames = localStorage.getItem('searchHistory')
+    return listofCityNames === null ? [] : JSON.parse(listofCityNames);
+}
+// local storage
+const saveCityNameToLocalStorage = function (cityName){ 
+    let searchHistory = getSearchHistory();
+    if (searchHistory.includes(cityName)===false){
+        searchHistory.push(cityName);
+    }
+    localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+}
+
+const renderSearchHistory = function (){
+    const searchHistory = getSearchHistory(); 
+    const searchHistorySection = document.getElementById('search-history-list');
+    searchHistorySection.innerHTML = "";
+    searchHistory.forEach(cityName => {
+        // ✅ Create element
+        const el = document.createElement('li');
+
+        // ✅ Add classes to element
+        el.classList.add('list-group-item');
+
+        // ✅ Add text content to element
+        el.textContent = cityName;
+        searchHistorySection.append(el);
+    });
+}
+
+// - click history will render city info
+// 5 day forecast
+// `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=imperial&exclude=current,minutely,hourly,alerts&appid=${apiKey}`;
+// -        // displays the date
+            // an icon representation of weather conditions
+            // the temperature
+            // the humidity
+            // wind speed
+// alert if humidity is high
+// uv index
+
 
 // search button click event
 document.getElementById("search-button").addEventListener("click", async (event)=>{
@@ -44,16 +93,15 @@ document.getElementById("search-button").addEventListener("click", async (event)
 
     // displays the city info that we get from the api
     renderCityInfo(cityInfo);
+
+    saveCityNameToLocalStorage(cityInfo.name);
+
+    renderSearchHistory();
+    //local storage
+    // localStorage.getItem(keyname)
 })
 
-// search history
-// - click history will render city info
-// 5 day forecast
-// `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=imperial&exclude=current,minutely,hourly,alerts&appid=${apiKey}`;
-// -        // displays the date
-            // an icon representation of weather conditions
-            // the temperature
-            // the humidity
-            // wind speed
-// alert if humidity is high
-// uv index
+window.addEventListener('load', (event) => {
+    renderSearchHistory();
+  });
+  
