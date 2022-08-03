@@ -52,7 +52,7 @@
         height: 100vh;
     }
     
-    #five-day-forecast .card {
+    #five-day-forecast .card-body {
         border: 1px solid black!important;
     }
     

@@ -4,18 +4,20 @@ const day = moment().format('dddd');
 
 const getWeatherByCity = async function(cityName){
     return fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}`)
-    .then(function(response){ // response => response.json()
-        return response.json()
-    })
-    .then(data=>data)
+        .then(response => response.json())
+        .then(data=>data)
 }
 
 const getUvIndex = async function(latitude,longitude){
     return fetch(`https://api.openweathermap.org/data/2.5/uvi?lat=${latitude}&lon=${longitude}&appid=${apiKey}`)
-    .then(function(response){ // response => response.json()
-        return response.json()
-    })
-    .then(data=>data)
+        .then(response => response.json())
+        .then(data=>data)
+}
+
+const getFiveDayForecast = async function(latitude,longitude){
+    return fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${latitude}&lon=${longitude}&units=imperial&exclude=current,minutely,hourly,alerts&appid=${apiKey}`)
+        .then(response => response.json())
+        .then(data=>data)
 }
 
 
@@ -27,7 +29,8 @@ const renderCityInfo = async function (cityInfo){
     const iconCode = cityInfo.weather[0].icon;
     const iconURL = getWeatherIcon(iconCode);
     const uvIndex = await getUvIndex(cityInfo.coord.lat,cityInfo.coord.lon);
-
+    console.log(uvIndex);
+    console.log(cityInfo);
     const currentCity = `
         <h2 id="currentCity">
             ${cityInfo.name} <img src="${iconURL}" alt="${cityInfo.weather[0].description}" />
@@ -44,6 +47,7 @@ const renderCityInfo = async function (cityInfo){
     `;
     document.getElementById("city-weather-details").innerHTML = currentCity;
     renderUvIndexColor(uvIndex.value);
+    renderFiveDayForecast(uvIndex);
     displayWeatherContent (true);
 }
 
@@ -76,6 +80,7 @@ const getSearchHistory = function () {
     const listofCityNames = localStorage.getItem('searchHistory')
     return listofCityNames === null ? [] : JSON.parse(listofCityNames);
 }
+
 // local storage
 const saveCityNameToLocalStorage = function (cityName){ 
     let searchHistory = getSearchHistory();
@@ -107,17 +112,33 @@ const renderSearchHistory = function (){
     });
 }
 
-// - click history will render city info
-// 5 day forecast
-// `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=imperial&exclude=current,minutely,hourly,alerts&appid=${apiKey}`;
-// -        // displays the date
-            // an icon representation of weather conditions
-            // the temperature
-            // the humidity
-            // wind speed
-// alert if humidity is high
-// uv index
+const renderFiveDayForecast = async function(uvIndex){
 
+  const forecast = await getFiveDayForecast(uvIndex.lat, uvIndex.lon);
+  const dailyWeather = forecast.daily;
+  let dayCard = "";
+
+  for (let i = 0; i<5; i++){
+    const day = dailyWeather[i];
+
+    let currDate = moment.unix(day.dt).format("MM/DD/YYYY");
+    let currDay = moment.unix(day.dt).format('dddd');
+    let iconURL = getWeatherIcon (day.weather[0].icon);
+
+    dayCard = dayCard + `
+        <div class="card-body m-3">
+            <h5>${currDate}</h5>
+            <h5>${currDay}</h5>
+            <p><img src="${iconURL}" /></p>
+            <p>Temp: ${day.temp.day} °F</p>
+            <p>Humidity: ${day.humidity}\%</p>
+            <p>Wind Speed: ${day.wind_speed}
+        </div>
+    `;
+  }
+
+  document.getElementById ("five-day-forecast").innerHTML = dayCard;
+}
 
 // search button click event
 document.getElementById("search-button").addEventListener("click", async (event)=>{
@@ -138,7 +159,8 @@ document.getElementById("search-button").addEventListener("click", async (event)
     // localStorage.getItem(keyname)
 })
 
+// this will fire on page load
 window.addEventListener('load', (event) => {
     renderSearchHistory();
-  });
+});
   
